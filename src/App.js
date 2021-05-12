@@ -15,6 +15,11 @@ import { bytecode } from './bytecode';
 const App = () => {
   const [balance, setBalance] = useState(0);
   const [address, setAddress] = useState("");
+  const [smartContractAddress, setSmartContractAddress] = useState("");
+  const [name, setName] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
 
   if (window.web3) {
     window.web3 = new Web3(window.web3.currentProvider);
@@ -27,19 +32,25 @@ const App = () => {
 
     const myContract = new window.web3.eth.Contract(abi);
 
-    myContract
+    const newContractInstance = await myContract
       .deploy({
         data: bytecode,
-        arguments: [window.web3.utils.asciiToHex('DiscoveryArtToken'), window.web3.utils.asciiToHex('DAT')],
-      })
-      .send({
+        arguments: [window.web3.utils.asciiToHex(name), window.web3.utils.asciiToHex(symbol)],
+      }).send({
         from: account1,
         gas: 4000000,
       })
-      .then(function (newContractInstance) {
         console.log(newContractInstance.options.address); // instance with the new contract address
-      });
+        setSmartContractAddress(newContractInstance.options.address)
   };
+
+  const showNameAndAddress = async () => {
+    const myNewContract = new window.web3.eth.Contract(abi, smartContractAddress);
+    const newTokenName = await  myNewContract.methods.name().call()
+    const newTokenSymbol = await  myNewContract.methods.symbol().call()
+    setTokenName(window.web3.utils.hexToAscii(newTokenName))
+    setTokenSymbol(window.web3.utils.hexToAscii(newTokenSymbol))
+  }
 
   const getMyBalance = async () => {
     const accounts = await window.web3.eth.getAccounts();
@@ -65,7 +76,16 @@ const App = () => {
       <header className="App-header">
         <h4>Account-0: {address}</h4>
         <h3>Balance: {balance}</h3>
-        <button onClick={deployContract}>Deploy a contract</button>
+        <h4>Please set your token name and symbol :</h4>
+        <input type="text" placeholder="Token name" onChange={(e)=>{setName(e.target.value)}}></input>
+        <input type="text" placeholder="Token symbol" onChange={(e)=>{setSymbol(e.target.value)}}></input>
+        <br></br>
+        <button onClick={deployContract}>Deploy your contract</button>
+        <h5>smart contract deployed: {smartContractAddress}</h5>
+        <button onClick={showNameAndAddress}>Show tokenName and symbol</button>
+        <h5>token name: {tokenName}</h5>
+        <h5>token symbol: {tokenSymbol}</h5>
+        <br></br>
       </header>
     </div>
   );
