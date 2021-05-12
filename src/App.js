@@ -19,26 +19,22 @@ const App = () => {
   if (window.web3) {
     window.web3 = new Web3(window.web3.currentProvider);
     window.ethereum.enable();
-    // return true;
   }
 
   const deployContract = async () => {
     const accounts = await window.web3.eth.getAccounts();
     const account1 = accounts[0];
 
-    const myContract = new window.web3.eth.Contract(abi, {
-      gasPrice: 52000000,
-      from: account1,
-    });
+    const myContract = new window.web3.eth.Contract(abi);
 
     myContract
       .deploy({
         data: bytecode,
+        arguments: [window.web3.utils.asciiToHex('DiscoveryArtToken'), window.web3.utils.asciiToHex('DAT')],
       })
       .send({
         from: account1,
-        gas: 7492052,
-        gasPrice: 52000000,
+        gas: 4000000,
       })
       .then(function (newContractInstance) {
         console.log(newContractInstance.options.address); // instance with the new contract address
