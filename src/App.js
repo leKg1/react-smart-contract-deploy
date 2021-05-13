@@ -18,6 +18,7 @@ const App = () => {
   const [smartContractAddress, setSmartContractAddress] = useState("");
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
+  const [initialSupply, setInitialSupply] = useState(0);
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
 
@@ -35,7 +36,9 @@ const App = () => {
     const newContractInstance = await myContract
       .deploy({
         data: bytecode,
-        arguments: [window.web3.utils.asciiToHex(name), window.web3.utils.asciiToHex(symbol)],
+        arguments: [window.web3.utils.asciiToHex(name), 
+          window.web3.utils.asciiToHex(symbol), 
+          window.web3.utils.asciiToHex(initialSupply)],
       }).send({
         from: account1,
         gas: 4000000,
@@ -79,6 +82,7 @@ const App = () => {
         <h4>Please set your token name and symbol :</h4>
         <input type="text" placeholder="Token name" onChange={(e)=>{setName(e.target.value)}}></input>
         <input type="text" placeholder="Token symbol" onChange={(e)=>{setSymbol(e.target.value)}}></input>
+        <input type="text" placeholder="InitialSupply" onChange={(e)=>{setInitialSupply(e.target.value)}}></input>
         <br></br>
         <button onClick={deployContract}>Deploy your contract</button>
         <h5>smart contract deployed: {smartContractAddress}</h5>
