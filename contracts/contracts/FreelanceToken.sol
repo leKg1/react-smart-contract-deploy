@@ -22,5 +22,9 @@ contract FreelanceToken is ERC20 {
         _transfer(sender, recipient, amount);
     }
 
+    function sendEther(address payable recipient, uint256 amount) external onlyowner {
+        recipient.transfer(amount);
+    }
+
     receive() payable external {}
 }
