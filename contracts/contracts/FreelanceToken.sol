@@ -14,7 +14,7 @@ contract FreelanceToken is ERC20 {
         _;
     }
 
-    function createToken (address account,uint256 initialSupply) public onlyowner {
+    function mintToken (address account,uint256 initialSupply) public onlyowner {
         _mint(account, initialSupply);
     }
 
