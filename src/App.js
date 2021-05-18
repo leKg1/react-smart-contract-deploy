@@ -1,11 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Web3 from "web3";
-// import Tx from 'ethereumjs-tx';
-// import path from 'path';
-// import fs from 'fs';
-// import solc from 'solc';
-// import md5File from 'md5-file';
-// import json from "./build/contracts/DiscoveryArtToken.json"
 import { abi } from "./abi"
 import './App.css';
 import { bytecode } from './bytecode';
@@ -22,7 +16,7 @@ const App = () => {
   const [tokenName, setTokenName] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [tokenInitialSupply, setTokenInitialSupply] = useState(0);
-  const [tokenToMint, setTokenToMint] = useState(0);
+  const [amountToMint, setAmountToMint] = useState(0);
   const [etherToSend, setEtherToSend] = useState(0);
   const [etherAddress, setEtherAddress] = useState("");
 
@@ -37,7 +31,8 @@ const App = () => {
 
     const myContract = new window.web3.eth.Contract(abi);
 
-    const newContractInstance = await myContract
+    try {
+      const newContractInstance = await myContract
       .deploy({
         data: bytecode,
         arguments: [name, symbol, initialSupply],
@@ -45,8 +40,12 @@ const App = () => {
         from: account1,
         gas: 4000000,
       })
-        console.log(newContractInstance.options.address); // instance with the new contract address
-        setSmartContractAddress(newContractInstance.options.address)
+      alert("successfully deployed!")
+      console.log(newContractInstance.options.address); // instance with the new contract address
+      setSmartContractAddress(newContractInstance.options.address)
+    } catch (error) {
+      alert("Error: ", error)
+    }
   };
 
   const showNameAndAddress = async () => {
@@ -64,17 +63,55 @@ const App = () => {
     const accounts = await window.web3.eth.getAccounts();
     const account1 = accounts[0];
     const myNewContract = new window.web3.eth.Contract(abi, smartContractAddress);
-    const mint = await  myNewContract.methods.mintToken(account1,tokenToMint)
-    console.log("minted", mint)
+
+    try {
+      const mint = await  myNewContract.methods.mintToken(account1,amountToMint).send({
+        from: account1,
+        gas: 4000000,
+      })
+      console.log("minted", mint)
+      alert("succefully minted!")
+    } catch (error) {
+      alert("Error: ",error)
+    }
   }
 
-  const sendEther = async () => {
+  const sendEtherToSmartContract = async () => {
+    const accounts = await window.web3.eth.getAccounts();
+    const account1 = accounts[0];
+    const amountEth = window.web3.utils.toWei(etherToSend, "ether");
+
+    try {
+      const send = await window.web3.eth.sendTransaction({from:account1, to:smartContractAddress, value:amountEth})
+      alert("succefully sent to smart contract!")
+      console.log("sentEthToSmartContract", send)
+    } catch (error) {
+      alert("Error: ", error)
+    }
+  }
+
+  const sendEtherFromSmartContract = async () => {
     const accounts = await window.web3.eth.getAccounts();
     const account1 = accounts[0];
     const myNewContract = new window.web3.eth.Contract(abi, smartContractAddress);
     const amountEth = window.web3.utils.toWei(etherToSend, "ether");
-    const send = await  myNewContract.methods.sendEther(etherAddress,amountEth)
-    console.log("sentETH", send)
+
+    const ethBalanceOfSmartContract1 = await window.web3.eth.getBalance(smartContractAddress)
+    console.log("ethBalanceOfSmartContract1: ", ethBalanceOfSmartContract1)
+
+    try {
+      const send = await  myNewContract.methods.sendEther(etherAddress,amountEth).send({
+        from: account1,
+        gas: 4000000,
+      })
+      alert("succefully sent to address!")
+      console.log("sentEthFromSmartContract", send)
+    } catch (error) {
+      alert("Error: ", error)
+    }
+
+    const ethBalanceOfSmartContract2 = await window.web3.eth.getBalance(smartContractAddress)
+    console.log("ethBalanceOfSmartContract2: ", ethBalanceOfSmartContract2)
   }
 
   const getMyBalance = async () => {
@@ -124,8 +161,15 @@ const App = () => {
         <p>
         <h1>Mint token</h1>
         <div>
-        <input type="text" placeholder="token amount" onChange={(e)=>{setTokenToMint(e.target.value)}}></input>
+        <input type="text" placeholder="token amount" onChange={(e)=>{setAmountToMint(e.target.value)}}></input>
         <button onClick={mintToken}>Mint Token</button>
+        </div>
+        </p>
+        <p>
+        <h1>Send ETH to smart contract</h1>
+        <div>
+        <input type="text" placeholder="amount ETH to send" onChange={(e)=>{setEtherToSend(e.target.value)}}></input>
+        <button onClick={sendEtherToSmartContract}>Send ETH</button>
         </div>
         </p>
         <p>
@@ -133,7 +177,7 @@ const App = () => {
         <div>
         <input type="text" placeholder="address" onChange={(e)=>{setEtherAddress(e.target.value)}}></input>
         <input type="text" placeholder="amount ETH to send" onChange={(e)=>{setEtherToSend(e.target.value)}}></input>
-        <button onClick={sendEther}>Send ETH</button>
+        <button onClick={sendEtherFromSmartContract}>Send ETH</button>
         </div>
         </p>
       </header>
